@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IAF Training API Documentation</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface: #1e293b;
+            --primary: #3b82f6;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --get: #10b981;
+            --post: #f59e0b;
+            --patch: #6366f1;
+            --delete: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin: 0 0 0.5rem 0;
+        }
+
+        h2.group-title {
+            margin-top: 3rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .endpoint {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .endpoint-header {
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .method {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.875rem;
+            letter-spacing: 0.5px;
+        }
+
+        .method.get {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--get);
+        }
+
+        .method.post {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--post);
+        }
+
+        .method.patch {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--patch);
+        }
+
+        .method.delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--delete);
+        }
+
+        .path {
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+
+        .roles {
+            margin-left: auto;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .endpoint-body {
+            padding: 1rem;
+        }
+
+        .description {
+            margin: 0 0 1rem 0;
+            color: var(--text-muted);
+        }
+
+        .payload-section,
+        .response-section {
+            margin-top: 1rem;
+            background: #000;
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .section-title {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin: 0 0 0.5rem 0;
+            font-weight: 600;
+        }
+
+        pre {
+            margin: 0;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            color: #a5b4fc;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>IAF Training - API Documentation</h1>
+            <p>Base URL: <code>http://localhost:5000/api</code></p>
+            <p>
+                Auth: All routes (except login) require a Bearer token in the
+                <code>Authorization</code> header.
+            </p>
+        </header>
+
+        <!-- AUTH GROUP -->
+        <h2 class="group-title">Authentication</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/api/auth/login</span>
+                <span class="roles">Public</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Authenticate user and get JWT token.</p>
+                <div class="payload-section">
+                    <h3 class="section-title">Request Payload</h3>
+                    <pre>
+{
+  "email": "arjun.singh@iaf.gov.in",
+  "password": "password"
+}</pre>
+                </div>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+                    <pre>
+{
+  "token": "eyJhbG...",
+  "user": {
+    "id": "1",
+    "email": "arjun.singh@iaf.gov.in",
+    "role": "trainee",
+    "name": "Flight Lt. Arjun Singh",
+    "rank": "Flight Lieutenant"
+  }
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/api/auth/me</span>
+                <span class="roles">Bearer token required</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Get current user's profile.</p>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+                    <pre>
+{
+  "id": "1",
+  "email": "arjun.singh@iaf.gov.in",
+  "name": "Flight Lt. Arjun Singh",
+  "role": "trainee",
+  "rank": "Flight Lieutenant"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- USERS GROUP -->
+        <h2 class="group-title">Users</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/api/users</span>
+                <span class="roles">Admin / Instructor</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">
+                    List all users. Supports <code>?role=trainee</code> &
+                    <code>?search=John</code>
+                </p>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+                    <pre>
+[
+  {
+    "id": "...",
+    "name": "...",
+    "email": "...",
+    "role": "trainee"
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/api/users</span>
+                <span class="roles">Admin only</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Create a new user.</p>
+                <div class="payload-section">
+                    <h3 class="section-title">Request Payload</h3>
+                    <pre>
+{
+  "name": "New User",
+  "email": "new.user@iaf.gov.in",
+  "password": "password123",
+  "role": "trainee",
+  "rank": "Flying Officer",
+  "base": "Delhi"
+}</pre>
+                </div>
+                <div class="response-section">
+                    <h3 class="section-title">Response (201 Created)</h3>
+                    <pre>
+{
+  "id": "...",
+  "name": "New User",
+  "email": "new.user@iaf.gov.in",
+  "role": "trainee"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- COURSES GROUP -->
+        <h2 class="group-title">Courses</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/api/courses</span>
+                <span class="roles">Any logged-in user</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">
+                    List all training courses. Query params:
+                    <code>?category=&status=&difficulty=</code>
+                </p>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+                    <pre>
+[
+  {
+    "id": "1",
+    "title": "Su-30MKI Engine Systems",
+    "category": "Jet Engine Systems",
+    "difficulty": "advanced",
+    "moduleCount": 12,
+    "completedModules": 8,
+    "status": "in-progress"
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/api/courses</span>
+                <span class="roles">Admin / Instructor</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Create a new training course.</p>
+                <div class="payload-section">
+                    <h3 class="section-title">Request Payload</h3>
+                    <pre>
+{
+  "title": "New Navigation Training",
+  "category": "Navigation",
+  "description": "Learn advanced navigation concepts.",
+  "difficulty": "intermediate"
+}</pre>
+                </div>
+                <div class="response-section">
+                    <h3 class="section-title">Response (201 Created)</h3>
+                    <pre>
+{
+  "id": "...",
+  "title": "New Navigation Training",
+  "category": "Navigation",
+  "status": "not-started"
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULES GROUP -->
+        <h2 class="group-title">Modules</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/api/modules</span>
+                <span class="roles">Any logged-in user</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">
+                    List modules. Query constraint: <code>?courseId=1</code>
+                </p>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+                    <pre>
+[
+  {
+    "id": "m1",
+    "courseId": "1",
+    "title": "AL-31FP Engine Overview",
+    "isCompleted": true,
+    "procedures": [...],
+    "diagrams": [...]
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/api/modules/:id/complete</span>
+                <span class="roles">Any logged-in user</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">
+                    Mark a module as complete. This auto-calculates the relative course
+                    progress and updates the trainee's readiness scores.
+                </p>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+                    <pre>
+{
+  "message": "Module marked as complete.",
+  "module": {
+    "id": "m1",
+    "isCompleted": true
+  }
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIMULATIONS GROUP -->
+        <h2 class="group-title">Simulations</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/api/simulations</span>
+                <span class="roles">Any logged-in user</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">
+                    List simulations. Query params:
+                    <code>?type=&difficulty=&status=</code>
+                </p>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+                    <pre>
+[
+  {
+    "id": "sim1",
+    "title": "Engine Fire Emergency",
+    "type": "maintenance",
+    "difficulty": "advanced",
+    "status": "available"
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/api/simulations/:id/start</span>
+                <span class="roles">Any logged-in user</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">
+                    Start a simulation. Sets status to `in-progress`.
+                </p>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+                    <pre>
+{
+  "message": "Simulation started.",
+  "simulation": {
+     "id": "sim1",
+     "status": "in-progress"
+  }
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/api/simulations/:id/complete</span>
+                <span class="roles">Any logged-in user</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">
+                    Complete a simulation run. Updates trainee simulation hours and
+                    saves their score.
+                </p>
+                <div class="payload-section">
+                    <h3 class="section-title">Request Payload</h3>
+                    <pre>
+{
+  "score": 95
+}</pre>
+                </div>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+                    <pre>
+{
+  "message": "Simulation completed.",
+  "simulation": {
+     "id": "sim1",
+     "status": "completed"
+  }
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="group-title">Instructor Analytics</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/api/analytics</span>
+                <span class="roles">Instructor / Admin</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">
+                    Returns aggregation of completion rates, trends, and simulations
+                    used across trainees.
+                </p>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+                    <pre>
+{
+  "summary": {
+    "totalTrainees": 15,
+    "avgReadiness": 72,
+    "totalSimHours": 320.5
+  },
+  "charts": {
+     "trainingCompletion": [...],
+     "readinessTrend": [...]
+  }
+}</pre>
+                </div>
+            </div>
+        </div>
+        <h2 class="group-title">Progress</h2>
+        
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/api/progress</span>
+                <span class="roles">Any logged-in user</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Get progress records. Trainee gets own progress; Instructor/Admin gets all.</p>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+<pre>[
+  {
+    "traineeId": "1",
+    "readinessScore": 78,
+    "overallProgress": 58,
+    "simulationHours": 42
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method patch">PATCH</span>
+                <span class="path">/api/progress/:traineeId</span>
+                <span class="roles">Instructor / Admin</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Update trainee progress manually.</p>
+                <div class="payload-section">
+                    <h3 class="section-title">Request Payload</h3>
+<pre>{
+  "readinessScore": 85,
+  "simulationHours": 50
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="group-title">Digital Twin</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/api/digital-twin</span>
+                <span class="roles">Any logged-in user</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Get list of all functional aircraft systems. Query params: <code>?category=&status=</code></p>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+<pre>[
+  {
+    "id": "sys1",
+    "name": "AL-31FP Engine",
+    "category": "engine",
+    "health": 94,
+    "status": "operational"
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method patch">PATCH</span>
+                <span class="path">/api/digital-twin/:systemId/components/:componentId</span>
+                <span class="roles">Instructor / Admin</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Update a component's health status. Auto-recalculates the overall system health.</p>
+                <div class="payload-section">
+                    <h3 class="section-title">Request Payload</h3>
+<pre>{
+  "health": 60,
+  "status": "maintenance"
+}</pre>
+                </div>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+<pre>{
+  "message": "Component updated. System health recalculated.",
+  "system": {
+    "id": "sys1",
+    "health": 85
+  }
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="group-title">AI Assistant</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method post">POST</span>
+                <span class="path">/api/ai-assistant/message</span>
+                <span class="roles">Any logged-in user</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Send a query to the AI Assistant and receive an expert response.</p>
+                <div class="payload-section">
+                    <h3 class="section-title">Request Payload</h3>
+<pre>{
+  "content": "What is the emergency procedure for an engine fire?"
+}</pre>
+                </div>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+<pre>{
+  "response": {
+    "role": "assistant",
+    "content": "In case of an engine fire indication on the Su-30MKI, follow these emergency procedures...",
+    "timestamp": "2024-04-02T12:00:00Z"
+  }
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="group-title">Alerts</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/api/alerts</span>
+                <span class="roles">Any logged-in user</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Fetch system alerts. Query filter: <code>?type=critical&unread=true</code></p>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+<pre>[
+  {
+    "id": "alert1",
+    "type": "critical",
+    "title": "System Maintenance",
+    "isRead": false
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method patch">PATCH</span>
+                <span class="path">/api/alerts/:id/read</span>
+                <span class="roles">Any logged-in user</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Mark a specific alert as read.</p>
+            </div>
+        </div>
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method patch">PATCH</span>
+                <span class="path">/api/alerts/read-all</span>
+                <span class="roles">Any logged-in user</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Mark all open alerts as read.</p>
+            </div>
+        </div>
+
+        <h2 class="group-title">Instructor Portal</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/api/instructor/trainees</span>
+                <span class="roles">Instructor / Admin</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Get list of active trainees along with their progress snapshot and readiness scores.</p>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+<pre>[
+  {
+    "id": "1",
+    "name": "Flight Lt. Arjun Singh",
+    "overallProgress": 58,
+    "readinessScore": 78
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/api/instructor/sessions</span>
+                <span class="roles">Instructor / Admin</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">List upcoming and completed training sessions.</p>
+            </div>
+        </div>
+
+        <h2 class="group-title">Admin Dashboard</h2>
+
+        <div class="endpoint">
+            <div class="endpoint-header">
+                <span class="method get">GET</span>
+                <span class="path">/api/admin/system-status</span>
+                <span class="roles">Admin</span>
+            </div>
+            <div class="endpoint-body">
+                <p class="description">Get the operational status vectors of all training platform microservices.</p>
+                <div class="response-section">
+                    <h3 class="section-title">Response (200 OK)</h3>
+<pre>[
+  {
+    "service": "Digital Twin Engine",
+    "status": "operational",
+    "uptime": "99.9%"
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

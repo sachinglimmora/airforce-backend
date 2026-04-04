@@ -1,0 +1,97 @@
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
+const courseRoutes = require('./routes/courses');
+const moduleRoutes = require('./routes/modules');
+const simulationRoutes = require('./routes/simulations');
+const progressRoutes = require('./routes/progress');
+const digitalTwinRoutes = require('./routes/digitalTwin');
+const aiAssistantRoutes = require('./routes/aiAssistant');
+const instructorRoutes = require('./routes/instructor');
+const adminRoutes = require('./routes/admin');
+const alertRoutes = require('./routes/alerts');
+const analyticsRoutes = require('./routes/analytics');
+
+const { errorHandler } = require('./middleware/errorHandler');
+const { notFound } = require('./middleware/notFound');
+
+const app = express();
+
+// ─── Security & Middleware ──────────────────────────────────────────────────
+app.use(helmet());
+
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173')
+  .split(',')
+  .map(o => o.trim());
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g. Postman, server-to-server)
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  credentials: true,
+}));
+
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ─── Rate Limiting ──────────────────────────────────────────────────────────
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 200,
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api', limiter);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many login attempts, please try again later.' },
+});
+
+// ─── Serve API Docs ─────────────────────────────────────────────────────────
+const path = require('path');
+app.use('/docs', express.static(path.join(__dirname, 'public')));
+app.get('/docs', (req, res) => res.sendFile(path.join(__dirname, 'public', 'docs.html')));
+
+// ─── Health Check ───────────────────────────────────────────────────────────
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'operational',
+    service: 'IAF Training Platform API',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+  });
+});
+
+// ─── Routes ─────────────────────────────────────────────────────────────────
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/modules', moduleRoutes);
+app.use('/api/simulations', simulationRoutes);
+app.use('/api/progress', progressRoutes);
+app.use('/api/digital-twin', digitalTwinRoutes);
+app.use('/api/ai-assistant', aiAssistantRoutes);
+app.use('/api/instructor', instructorRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/alerts', alertRoutes);
+app.use('/api/analytics', analyticsRoutes);
+
+// ─── Error Handling ─────────────────────────────────────────────────────────
+app.use(notFound);
+app.use(errorHandler);
+
+module.exports = app;
