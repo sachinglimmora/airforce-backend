@@ -19,6 +19,9 @@ const analyticsRoutes = require('./routes/analytics');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { notFound } = require('./middleware/notFound');
+const connectDB = require('./config/db');
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 
