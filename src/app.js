@@ -20,10 +20,17 @@ const analyticsRoutes = require('./routes/analytics');
 const { errorHandler } = require('./middleware/errorHandler');
 const { notFound } = require('./middleware/notFound');
 const connectDB = require('./config/db');
-// Connect to MongoDB
-connectDB();
-
 const app = express();
+
+// ─── Middleware to Ensure Database Connection ──────────────────────────
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(503).json({ error: 'Database connection failed. Please try again in 30 seconds.' });
+  }
+});
 
 // ─── Security & Middleware ──────────────────────────────────────────────────
 app.use(helmet());

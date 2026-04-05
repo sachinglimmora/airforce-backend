@@ -14,8 +14,11 @@ function safeUser(u) {
 }
 
 function signToken(user) {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is missing. Please check your environment variables.');
+  }
   return jwt.sign(
-    { sub: user.id || user._id, role: user.role },
+    { sub: user.id || user._id, role: user.role, email: user.email },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
   );
@@ -41,8 +44,8 @@ async function login(req, res, next) {
 
     await AuditLog.create({
       id: uuidv4(),
-      userId: user.id,
-      userName: user.name,
+      userId: user.id || user._id.toString(),
+      userName: user.name || 'Unknown User',
       action: 'Login',
       module: 'Auth',
       details: `Successful login from ${req.ip}`,
