@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { v4: uuidv4 } = require('uuid');
-const { users, roles, auditLogs, systemStatus, analyticsData } = require('../data/db');
+const db = require('../data/db');
+const { users, roles, auditLogs, systemStatus, analyticsData } = db;
 const { authenticate, authorize } = require('../middleware/auth');
 
 const adminOnly = authorize('admin');
@@ -81,9 +82,20 @@ router.patch('/system-status/:service', authenticate, adminOnly, (req, res) => {
   res.json(entry);
 });
 
+// ─── Security Settings ────────────────────────────────────────────────────────
+router.get('/security-settings', authenticate, adminOnly, (req, res) => res.json(db.securitySettings));
+
+router.patch('/security-settings', authenticate, adminOnly, (req, res) => {
+  Object.assign(db.securitySettings, req.body, { lastUpdated: new Date().toISOString() });
+  res.json(db.securitySettings);
+});
+
+// ─── Users (Admin view) ───────────────────────────────────────────────────────
+router.get('/users', authenticate, adminOnly, (req, res) => res.json(db.users));
+
 // ─── Analytics ────────────────────────────────────────────────────────────────
 router.get('/analytics', authenticate, adminOnly, (req, res) => {
-  res.json(analyticsData);
+  res.json(db.analyticsData);
 });
 
 module.exports = router;

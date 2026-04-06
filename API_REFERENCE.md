@@ -100,11 +100,11 @@ npm start     # production
 
 | Method | Path | Roles | Description |
 |--------|------|-------|-------------|
-| GET | `/` | admin | List users (Query: `?role=&search=`) |
-| GET | `/:id` | admin/own | Get user profile by ID |
+| GET | `/` | admin, instructor | List users (Query: `?role=&search=`) |
+| POST | `/` | admin | Enlist new personnel |
+| GET | `/:id` | admin/instructor/own | Get user profile by ID |
 | PATCH | `/:id` | admin/own | Update user details by ID |
-| DELETE | `/:id` | admin/own | Delete a user |
-| POST | `/` | admin | Create a new user |
+| DELETE | `/:id` | admin | Purge user record |
 
 ### Example payload (POST `/api/users`)
 ```json
@@ -308,6 +308,49 @@ npm start     # production
 
 ---
 
+## Admin & Security `/api/admin`
+
+Dedicated administrative console for high-level platform control.
+
+| Method | Path | Roles | Description |
+|--------|------|-------|-------------|
+| GET | `/dashboard` | admin | Strategic overview stats |
+| GET | `/roles` | admin | List authorization roles |
+| POST | `/roles` | admin | Initialize new role |
+| PATCH | `/roles/:id` | admin | Modify role permissions |
+| DELETE | `/roles/:id` | admin | Purge authorization role |
+| GET | `/audit-logs` | admin | Tactical audit trail (`?module=&userId=`) |
+| GET | `/system-status` | admin | Monitor infrastructure health |
+| PATCH | `/system-status/:service`| admin | Override service status |
+| GET | `/security-settings`| admin | Fetch security & MFA policies |
+| PATCH | `/security-settings`| admin | Update global security perimeter |
+| GET | `/analytics` | admin | Aggregate training performance data |
+
+### Example Payload (PATCH `/api/admin/security-settings`)
+```json
+{
+  "mfaEnabled": true,
+  "passwordPolicy": {
+    "minLength": 14,
+    "requireSpecialChar": true
+  },
+  "sessionTimeout": 45
+}
+```
+
+### Example Response (GET `/api/admin/dashboard`)
+```json
+{
+  "totalUsers": 250,
+  "totalTrainees": 180,
+  "systemStatus": [
+    { "service": "Simulation Engine", "status": "operational" }
+  ]
+}
+```
+
+---
+
 ## Rate Limits
-- All routes: **200 req / 15 min**
-- Auth routes: **20 req / 15 min**
+- All routes: **500 req / 15 min** (Increased for training sims)
+- Auth routes: **100 req / 15 min**

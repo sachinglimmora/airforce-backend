@@ -298,6 +298,23 @@ const analyticsData = {
   ],
 };
 
+// ─── Security Settings ────────────────────────────────────────────────────────
+const securitySettings = {
+  mfaEnabled: true,
+  passwordPolicy: {
+    minLength: 12,
+    requireSpecialChar: true,
+    requireNumbers: true,
+    passwordHistory: 5,
+  },
+  sessionTimeout: 30, // minutes
+  ipRangeRestriction: {
+    enabled: false,
+    allowedRanges: ['10.0.0.0/8'],
+  },
+  lastUpdated: new Date().toISOString(),
+};
+
 // ─── Chat History (per user) ──────────────────────────────────────────────────
 const chatHistory = {
   '1': [
@@ -320,4 +337,5 @@ module.exports = {
   alerts,
   analyticsData,
   chatHistory,
+  securitySettings,
 };
