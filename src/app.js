@@ -22,6 +22,9 @@ const { notFound } = require('./middleware/notFound');
 const connectDB = require('./config/db');
 const app = express();
 
+// Trust proxy for Vercel/proxies (critical for rate limiting)
+app.set('trust proxy', 1);
+
 // ─── Middleware to Ensure Database Connection ──────────────────────────
 app.use(async (req, res, next) => {
   try {
@@ -57,8 +60,8 @@ app.use(express.urlencoded({ extended: true }));
 // ─── Rate Limiting ──────────────────────────────────────────────────────────
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
-  max: 200,
-  message: { error: 'Too many requests, please try again later.' },
+  max: 500, // Increased for training environment
+  message: { message: 'Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -66,8 +69,8 @@ app.use('/api', limiter);
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
-  message: { error: 'Too many login attempts, please try again later.' },
+  max: 100, // Increased for training environment
+  message: { message: 'Too many login attempts, please try again later.' },
 });
 
 // ─── Serve API Docs ─────────────────────────────────────────────────────────
