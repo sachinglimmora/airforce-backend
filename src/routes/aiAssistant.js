@@ -55,13 +55,52 @@ function generateResponse(message) {
   };
 }
 
-// GET /api/ai-assistant/history
+/**
+ * @swagger
+ * tags:
+ *   name: AI Assistant
+ *   description: Virtual training assistant and intelligent knowledge base
+ */
+
+/**
+ * @swagger
+ * /api/ai-assistant/history:
+ *   get:
+ *     summary: Get chat history with the assistant
+ *     tags: [AI Assistant]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of previous messages
+ */
 router.get('/history', authenticate, (req, res) => {
   const history = chatHistory[req.user.id] || [];
   res.json(history);
 });
 
-// POST /api/ai-assistant/message
+/**
+ * @swagger
+ * /api/ai-assistant/message:
+ *   post:
+ *     summary: Send a message to the AI assistant
+ *     tags: [AI Assistant]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content: { type: 'string', example: 'How do I start the AL-31FP engine?' }
+ *     responses:
+ *       200:
+ *         description: AI response and updated conversation
+ */
 router.post('/message', authenticate, (req, res) => {
   const { content } = req.body;
 
@@ -106,7 +145,18 @@ router.post('/message', authenticate, (req, res) => {
   });
 });
 
-// DELETE /api/ai-assistant/history — clear chat
+/**
+ * @swagger
+ * /api/ai-assistant/history:
+ *   delete:
+ *     summary: Clear chat history
+ *     tags: [AI Assistant]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Chat history deleted
+ */
 router.delete('/history', authenticate, (req, res) => {
   chatHistory[req.user.id] = [];
   res.json({ message: 'Chat history cleared.' });

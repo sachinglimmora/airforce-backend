@@ -2,7 +2,25 @@ const router = require('express').Router();
 const { analyticsData, traineeProgress, users, simulations } = require('../data/db');
 const { authenticate, authorize } = require('../middleware/auth');
 
-// GET /api/analytics — full analytics data (instructor/admin)
+/**
+ * @swagger
+ * tags:
+ *   name: Analytics
+ *   description: Training performance data and trends
+ */
+
+/**
+ * @swagger
+ * /api/analytics:
+ *   get:
+ *     summary: Get overall platform analytics (Admin/Instructor only)
+ *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Global training metrics
+ */
 router.get('/', authenticate, authorize('instructor', 'admin'), (req, res) => {
   const allProgress = Object.values(traineeProgress);
   const totalTrainees = users.filter(u => u.role === 'trainee').length;
@@ -25,7 +43,18 @@ router.get('/', authenticate, authorize('instructor', 'admin'), (req, res) => {
   });
 });
 
-// GET /api/analytics/trainee — trainee's own analytics (readiness, skill trends)
+/**
+ * @swagger
+ * /api/analytics/trainee:
+ *   get:
+ *     summary: Get self-analytics (Trainee only)
+ *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Individual performance data
+ */
 router.get('/trainee', authenticate, (req, res) => {
   const progress = traineeProgress[req.user.id];
   if (!progress) return res.status(404).json({ error: 'No data found.' });

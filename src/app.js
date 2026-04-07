@@ -36,7 +36,17 @@ app.use(async (req, res, next) => {
 });
 
 // ─── Security & Middleware ──────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      styleSrc: ["'self'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https://cdn.jsdelivr.net", "https://fastly.picsum.photos"],
+      connectSrc: ["'self'", "http://localhost:8000", "http://127.0.0.1:8000", "https://*"],
+    },
+  },
+}));
 
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173')
   .split(',')
@@ -74,11 +84,31 @@ const authLimiter = rateLimit({
 });
 
 // ─── Serve API Docs ─────────────────────────────────────────────────────────
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
+
+// Serve the Swagger documentation
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: 'Airforce Glimmora API Documentation',
+  customCss: '.swagger-ui .topbar { display: none }', // Hide topbar for a cleaner look
+}));
+
+// Fallback for static docs
 const path = require('path');
 app.use('/docs', express.static(path.join(__dirname, 'public')));
 app.get('/docs', (req, res) => res.sendFile(path.join(__dirname, 'public', 'docs.html')));
 
 // ─── Health Check ───────────────────────────────────────────────────────────
+/**
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: Check system health and operational status
+ *     tags: [System]
+ *     responses:
+ *       200:
+ *         description: Operational status of the IAF Training API
+ */
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'operational',

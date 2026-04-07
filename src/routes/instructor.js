@@ -5,7 +5,25 @@ const { authenticate, authorize } = require('../middleware/auth');
 
 const instructorOnly = authorize('instructor', 'admin');
 
-// GET /api/instructor/trainees — list all trainees with overview stats
+/**
+ * @swagger
+ * tags:
+ *   name: Instructor
+ *   description: Instructor tools for session management and trainee oversight
+ */
+
+/**
+ * @swagger
+ * /api/instructor/trainees:
+ *   get:
+ *     summary: List all trainees with readiness scores
+ *     tags: [Instructor]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of trainees
+ */
 router.get('/trainees', authenticate, instructorOnly, (req, res) => {
   const trainees = users
     .filter(u => u.role === 'trainee')
@@ -24,7 +42,18 @@ router.get('/trainees', authenticate, instructorOnly, (req, res) => {
   res.json(trainees);
 });
 
-// GET /api/instructor/sessions
+/**
+ * @swagger
+ * /api/instructor/sessions:
+ *   get:
+ *     summary: Get scheduled training sessions
+ *     tags: [Instructor]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of sessions
+ */
 router.get('/sessions', authenticate, instructorOnly, (req, res) => {
   const userId = req.user.id;
   const myRole = req.user.role;
@@ -37,7 +66,18 @@ router.get('/sessions', authenticate, instructorOnly, (req, res) => {
   res.json(sessions);
 });
 
-// POST /api/instructor/sessions
+/**
+ * @swagger
+ * /api/instructor/sessions:
+ *   post:
+ *     summary: Schedule a new training session
+ *     tags: [Instructor]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       201:
+ *         description: Session scheduled
+ */
 router.post('/sessions', authenticate, instructorOnly, (req, res) => {
   const { title, date, duration, participants, type } = req.body;
 
@@ -60,7 +100,23 @@ router.post('/sessions', authenticate, instructorOnly, (req, res) => {
   res.status(201).json(session);
 });
 
-// PATCH /api/instructor/sessions/:id
+/**
+ * @swagger
+ * /api/instructor/sessions/{id}:
+ *   patch:
+ *     summary: Update session details
+ *     tags: [Instructor]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: 'string' }
+ *     responses:
+ *       200:
+ *         description: Session updated
+ */
 router.patch('/sessions/:id', authenticate, instructorOnly, (req, res) => {
   const session = trainingSessions.find(s => s.id === req.params.id);
   if (!session) return res.status(404).json({ error: 'Session not found.' });
@@ -71,7 +127,23 @@ router.patch('/sessions/:id', authenticate, instructorOnly, (req, res) => {
   res.json(session);
 });
 
-// DELETE /api/instructor/sessions/:id
+/**
+ * @swagger
+ * /api/instructor/sessions/{id}:
+ *   delete:
+ *     summary: Cancel training session
+ *     tags: [Instructor]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: 'string' }
+ *     responses:
+ *       200:
+ *         description: Session deleted
+ */
 router.delete('/sessions/:id', authenticate, instructorOnly, (req, res) => {
   const idx = trainingSessions.findIndex(s => s.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Session not found.' });
@@ -79,12 +151,34 @@ router.delete('/sessions/:id', authenticate, instructorOnly, (req, res) => {
   res.json({ message: 'Session deleted.' });
 });
 
-// GET /api/instructor/scenarios
+/**
+ * @swagger
+ * /api/instructor/scenarios:
+ *   get:
+ *     summary: List library of available scenarios
+ *     tags: [Instructor]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Scenario library
+ */
 router.get('/scenarios', authenticate, instructorOnly, (req, res) => {
   res.json(scenarios);
 });
 
-// POST /api/instructor/scenarios
+/**
+ * @swagger
+ * /api/instructor/scenarios:
+ *   post:
+ *     summary: Create new training scenario
+ *     tags: [Instructor]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       201:
+ *         description: Scenario created
+ */
 router.post('/scenarios', authenticate, instructorOnly, (req, res) => {
   const { title, description, type, difficulty, parameters } = req.body;
   if (!title || !type) return res.status(400).json({ error: 'title and type required.' });
@@ -104,7 +198,18 @@ router.post('/scenarios', authenticate, instructorOnly, (req, res) => {
   res.status(201).json(scenario);
 });
 
-// GET /api/instructor/analytics
+/**
+ * @swagger
+ * /api/instructor/analytics:
+ *   get:
+ *     summary: Instructor-level analytics overview
+ *     tags: [Instructor]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Collective performance analytics
+ */
 router.get('/analytics', authenticate, instructorOnly, (req, res) => {
   const totalTrainees = users.filter(u => u.role === 'trainee').length;
   const allProgress = Object.values(traineeProgress);

@@ -2,7 +2,25 @@ const router = require('express').Router();
 const { aircraftSystems } = require('../data/db');
 const { authenticate, authorize } = require('../middleware/auth');
 
-// GET /api/digital-twin — all aircraft systems
+/**
+ * @swagger
+ * tags:
+ *   name: Digital Twin
+ *   description: Real-time aircraft system monitoring and diagnostics
+ */
+
+/**
+ * @swagger
+ * /api/digital-twin:
+ *   get:
+ *     summary: Get all aircraft systems status
+ *     tags: [Digital Twin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of systems and their health
+ */
 router.get('/', authenticate, (req, res) => {
   const { category, status } = req.query;
   let result = [...aircraftSystems];
@@ -13,21 +31,75 @@ router.get('/', authenticate, (req, res) => {
   res.json(result);
 });
 
-// GET /api/digital-twin/:id
+/**
+ * @swagger
+ * /api/digital-twin/{id}:
+ *   get:
+ *     summary: Get detailed status of a specific aircraft system
+ *     tags: [Digital Twin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: System detailed data
+ */
 router.get('/:id', authenticate, (req, res) => {
   const system = aircraftSystems.find(s => s.id === req.params.id);
   if (!system) return res.status(404).json({ error: 'Aircraft system not found.' });
   res.json(system);
 });
 
-// GET /api/digital-twin/:id/components
+/**
+ * @swagger
+ * /api/digital-twin/{id}/components:
+ *   get:
+ *     summary: Get list of components for a system
+ *     tags: [Digital Twin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of components
+ */
 router.get('/:id/components', authenticate, (req, res) => {
   const system = aircraftSystems.find(s => s.id === req.params.id);
   if (!system) return res.status(404).json({ error: 'Aircraft system not found.' });
   res.json(system.components);
 });
 
-// PATCH /api/digital-twin/:systemId/components/:componentId — instructor/admin update component status
+/**
+ * @swagger
+ * /api/digital-twin/{systemId}/components/{componentId}:
+ *   patch:
+ *     summary: Update component status (Instructor/Admin only)
+ *     tags: [Digital Twin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: systemId
+ *         required: true
+ *         schema: type string
+ *       - in: path
+ *         name: componentId
+ *         required: true
+ *         schema: type string
+ *     responses:
+ *       200:
+ *         description: Component updated and system health recomputed
+ */
 router.patch('/:systemId/components/:componentId', authenticate, authorize('instructor', 'admin'), (req, res) => {
   const system = aircraftSystems.find(s => s.id === req.params.systemId);
   if (!system) return res.status(404).json({ error: 'Aircraft system not found.' });
