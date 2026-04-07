@@ -22,6 +22,8 @@ const { notFound } = require('./middleware/notFound');
 const connectDB = require('./config/db');
 const app = express();
 
+const path = require('path');
+
 // Trust proxy for Vercel/proxies (critical for rate limiting)
 app.set('trust proxy', 1);
 
@@ -35,6 +37,7 @@ app.use(async (req, res, next) => {
   }
 });
 
+// Welcome message
 app.get('/', (req, res) => {
   res.send('Welcome to the Airforce Training Platform API!');
 });
@@ -91,19 +94,18 @@ const authLimiter = rateLimit({
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 
-// Serve the Swagger documentation with CDN assets for Vercel stability
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customSiteTitle: 'Airforce Glimmora API Documentation',
-  customCss: '.swagger-ui .topbar { display: none }',
-  customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css',
-  customJs: [
-    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.js'
-  ]
-}));
+// JSON endpoint for Swagger spec (Used by the static HTML doc)
+app.get('/api/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
 
-// Fallback for static docs
-const path = require('path');
+// Main Documentation Entry point
+app.get('/api/docs', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'docs.html'));
+});
+
+// Fallback for static assets in public folder
 app.use('/docs', express.static(path.join(__dirname, 'public')));
 app.get('/docs', (req, res) => res.sendFile(path.join(__dirname, 'public', 'docs.html')));
 
