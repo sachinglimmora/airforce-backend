@@ -35,6 +35,10 @@ app.use(async (req, res, next) => {
   }
 });
 
+app.get('/', (req, res) => {
+  res.send('Welcome to the Airforce Training Platform API!');
+});
+
 // ─── Security & Middleware ──────────────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: {
@@ -87,10 +91,15 @@ const authLimiter = rateLimit({
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 
-// Serve the Swagger documentation
+// Serve the Swagger documentation with CDN assets for Vercel stability
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: 'Airforce Glimmora API Documentation',
-  customCss: '.swagger-ui .topbar { display: none }', // Hide topbar for a cleaner look
+  customCss: '.swagger-ui .topbar { display: none }',
+  customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css',
+  customJs: [
+    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.js'
+  ]
 }));
 
 // Fallback for static docs
