@@ -97,7 +97,7 @@ const swaggerSpec = require('./config/swagger');
 // JSON endpoint for Swagger spec (Used by the static HTML doc)
 app.get('/api/swagger.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
-  res.send(swaggerSpec);
+  res.json(swaggerSpec);
 });
 
 // Main Documentation Entry point

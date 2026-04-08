@@ -2,7 +2,7 @@ const swaggerJsdoc = require('swagger-jsdoc');
 
 const options = {
   definition: {
-    openapi: '3.1.0',
+    openapi: '3.0.0',
     info: {
       title: 'Airforce Glimmora API',
       version: '2.0.0',
