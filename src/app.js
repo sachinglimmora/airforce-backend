@@ -16,6 +16,9 @@ const instructorRoutes = require('./routes/instructor');
 const adminRoutes = require('./routes/admin');
 const alertRoutes = require('./routes/alerts');
 const analyticsRoutes = require('./routes/analytics');
+const documentRoutes = require('./routes/documents');
+const quizRoutes = require('./routes/quizzes');
+const knowledgeRoutes = require('./routes/knowledge');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { notFound } = require('./middleware/notFound');
@@ -143,6 +146,9 @@ app.use('/api/instructor', instructorRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/quizzes', quizRoutes);
+app.use('/api/knowledge', knowledgeRoutes);
 
 // ─── Error Handling ─────────────────────────────────────────────────────────
 app.use(notFound);
