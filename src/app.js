@@ -22,6 +22,7 @@ const knowledgeRoutes = require('./routes/knowledge');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { notFound } = require('./middleware/notFound');
+const { sessionTimeout } = require('./middleware/sessionTimeout');
 const connectDB = require('./config/db');
 const app = express();
 
@@ -132,6 +133,11 @@ app.get('/api/health', (req, res) => {
     environment: process.env.NODE_ENV,
   });
 });
+
+// ─── Session Idle Timeout (applied after JWT auth, platform-wide) ───────────
+// Routes apply authenticate → sessionTimeout per-route; this global middleware
+// only fires if req.user is already set (i.e. authenticate ran first).
+app.use('/api', sessionTimeout);
 
 // ─── Routes ─────────────────────────────────────────────────────────────────
 app.use('/api/auth', authLimiter, authRoutes);

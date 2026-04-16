@@ -2,6 +2,7 @@ const router = require('express').Router();
 const { v4: uuidv4 } = require('uuid');
 const { authenticate } = require('../middleware/auth');
 const { generateWithAI } = require('../services/aiService');
+const { upload, validateMagicBytes, handleUploadError } = require('../middleware/fileValidation');
 
 const documents = [];
 
@@ -53,32 +54,41 @@ router.get('/:id', authenticate, (req, res) => {
   res.json(doc);
 });
 
-router.post('/', authenticate, (req, res) => {
-  if (req.user.role !== 'instructor' && req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Only instructors and admins can upload documents' });
+router.post(
+  '/',
+  authenticate,
+  upload.single('file'),
+  validateMagicBytes,
+  handleUploadError,
+  (req, res) => {
+    if (req.user.role !== 'instructor' && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only instructors and admins can upload documents' });
+    }
+
+    const file = req.file;
+    const newDoc = {
+      id: uuidv4(),
+      title: req.body.title,
+      description: req.body.description || '',
+      category: req.body.category || 'manual',
+      aircraft: req.body.aircraft || 'general',
+      system: req.body.system || 'general',
+      fileType: file ? file.mimetype : (req.body.fileType || 'pdf'),
+      fileSize: file ? file.size : (req.body.fileSize || 0),
+      originalName: file ? file.originalname : undefined,
+      content: req.body.content || '',
+      tags: req.body.tags || [],
+      uploadedBy: req.user.name,
+      isPublic: req.body.isPublic !== false,
+      viewCount: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    documents.unshift(newDoc);
+    res.status(201).json(newDoc);
   }
-  
-  const newDoc = {
-    id: uuidv4(),
-    title: req.body.title,
-    description: req.body.description || '',
-    category: req.body.category || 'manual',
-    aircraft: req.body.aircraft || 'general',
-    system: req.body.system || 'general',
-    fileType: req.body.fileType || 'pdf',
-    fileSize: req.body.fileSize || 0,
-    content: req.body.content || '',
-    tags: req.body.tags || [],
-    uploadedBy: req.user.name,
-    isPublic: req.body.isPublic !== false,
-    viewCount: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  
-  documents.unshift(newDoc);
-  res.status(201).json(newDoc);
-});
+);
 
 router.post('/generate', authenticate, async (req, res) => {
   if (req.user.role !== 'instructor' && req.user.role !== 'admin') {

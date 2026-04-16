@@ -4,6 +4,7 @@ const { validationResult } = require('express-validator');
 const { v4: uuidv4 } = require('uuid');
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
+const { clearSession, touchSession } = require('../middleware/sessionTimeout');
 
 function safeUser(u) {
   const obj = u.toObject ? u.toObject() : u;
@@ -42,6 +43,9 @@ async function login(req, res, next) {
 
     const token = signToken(user);
 
+    // Start idle-timeout tracking for this session
+    touchSession(user.id || user._id.toString());
+
     await AuditLog.create({
       id: uuidv4(),
       userId: user.id || user._id.toString(),
@@ -60,6 +64,9 @@ async function login(req, res, next) {
 
 async function logout(req, res) {
   try {
+    // Expire the idle-timeout record immediately
+    clearSession(req.user.id);
+
     await AuditLog.create({
       id: uuidv4(),
       userId: req.user.id,

@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema({
   avatar: { type: String },
   joinedAt: { type: String },
   lastActive: { type: String },
+  mfaEnabled: { type: Boolean, default: false },
+  mfaSecret: { type: String, select: false }, // excluded from query results by default
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
