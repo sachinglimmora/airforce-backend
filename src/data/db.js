@@ -75,6 +75,45 @@ const users = [
     joinedAt: '2022-08-01',
     lastActive: new Date().toISOString(),
   },
+  {
+    id: 'admin-1',
+    name: 'System Admin',
+    email: 'admin@iaf.gov.in',
+    passwordHash: HASH,
+    role: 'admin',
+    rank: 'Group Captain',
+    squadron: 'HQ',
+    base: 'Delhi',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+    joinedAt: '2020-01-01',
+    lastActive: new Date().toISOString(),
+  },
+  {
+    id: 'instructor-1',
+    name: 'Lead Instructor',
+    email: 'instructor@iaf.gov.in',
+    passwordHash: HASH,
+    role: 'instructor',
+    rank: 'Wing Commander',
+    squadron: 'Training Wing',
+    base: 'Bangalore AFS',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=instructor',
+    joinedAt: '2020-01-01',
+    lastActive: new Date().toISOString(),
+  },
+  {
+    id: 'trainee-1',
+    name: 'Test Trainee',
+    email: 'trainee@iaf.gov.in',
+    passwordHash: HASH,
+    role: 'trainee',
+    rank: 'Flying Officer',
+    squadron: 'No. 1 Squadron',
+    base: 'Ambala Air Force Station',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=trainee',
+    joinedAt: '2020-01-01',
+    lastActive: new Date().toISOString(),
+  },
 ];
 
 // ─── Courses ─────────────────────────────────────────────────────────────────
@@ -204,6 +243,11 @@ const traineeProgress = {
     { name: 'Hydraulics', level: 9, maxLevel: 10, category: 'Technical' },
     { name: 'Avionics', level: 7, maxLevel: 10, category: 'Technical' },
   ] },
+  'trainee-1': { traineeId: 'trainee-1', overallProgress: 0, readinessScore: 0, simulationHours: 0, completedCourses: 0, totalCourses: 8, completedModules: 0, totalModules: 81, recentActivity: [], skills: [
+    { name: 'Engine Systems', level: 0, maxLevel: 10, category: 'Technical' },
+    { name: 'Hydraulics', level: 0, maxLevel: 10, category: 'Technical' },
+    { name: 'Avionics', level: 0, maxLevel: 10, category: 'Technical' },
+  ] },
 };
 
 // ─── Training Sessions ────────────────────────────────────────────────────────
@@ -319,6 +363,9 @@ const securitySettings = {
 const chatHistory = {
   '1': [
     { id: 'cm1', role: 'assistant', content: 'Welcome to the IAF Training Intelligence Platform. I am your AI training assistant. How can I help you today?', timestamp: '2024-01-15T10:00:00Z' },
+  ],
+  'trainee-1': [
+    { id: 'cm-t1', role: 'assistant', content: 'Welcome to the IAF Training Intelligence Platform, Test Trainee. I am your AI training assistant. How can I help you today?', timestamp: new Date().toISOString() },
   ],
 };
 
