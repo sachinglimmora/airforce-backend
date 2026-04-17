@@ -31,7 +31,8 @@ async function login(req, res, next) {
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { email, password } = req.body;
-    const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+    const trimmedEmail = email.trim();
+    const user = await User.findOne({ email: { $regex: new RegExp(`^${trimmedEmail}$`, 'i') } });
 
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 

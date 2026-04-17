@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const modulesController = require('../controllers/modulesController');
 const { authenticate, authorize } = require('../middleware/auth');
+const { upload, validateMagicBytes, handleUploadError } = require('../middleware/fileValidation');
 
 /**
  * @swagger
@@ -116,5 +117,22 @@ router.post('/:id/complete', authenticate, modulesController.completeModule);
  *         description: Module deleted
  */
 router.delete('/:id', authenticate, authorize('admin', 'instructor'), modulesController.deleteModule);
+
+router.post(
+  '/:id/video/upload',
+  authenticate,
+  authorize('admin', 'instructor'),
+  upload.single('video'),
+  validateMagicBytes,
+  handleUploadError,
+  modulesController.uploadModuleVideo
+);
+
+router.post(
+  '/:id/video/generate',
+  authenticate,
+  authorize('admin', 'instructor'),
+  modulesController.generateModuleVideo
+);
 
 module.exports = router;

@@ -5,7 +5,7 @@ const { users } = require('../data/db');
  * Verifies the Bearer JWT from the Authorization header.
  * Attaches the full user object to req.user.
  */
-function authenticate(req, res, next) {
+async function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -16,7 +16,12 @@ function authenticate(req, res, next) {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    const user = users.find(u => u.id === payload.sub);
+    const User = require('../models/User');
+    let user = users.find(u => u.id === payload.sub);
+
+    if (!user) {
+      user = await User.findOne({ id: payload.sub });
+    }
 
     if (!user) {
       return res.status(401).json({ error: 'User no longer exists.' });

@@ -19,6 +19,7 @@ const analyticsRoutes = require('./routes/analytics');
 const documentRoutes = require('./routes/documents');
 const quizRoutes = require('./routes/quizzes');
 const knowledgeRoutes = require('./routes/knowledge');
+const instructorVideosRoutes = require('./routes/instructorVideos');
 
 const { errorHandler } = require('./middleware/errorHandler');
 const { notFound } = require('./middleware/notFound');
@@ -53,7 +54,8 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
       styleSrc: ["'self'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https://cdn.jsdelivr.net", "https://fastly.picsum.photos"],
+      imgSrc: ["'self'", "data:", "https://cdn.jsdelivr.net", "https://fastly.picsum.photos", "https://res.cloudinary.com"],
+      mediaSrc: ["'self'", "https://res.cloudinary.com"],
       connectSrc: ["'self'", "http://localhost:8000", "http://127.0.0.1:8000", "https://*"],
     },
   },
@@ -155,6 +157,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
+app.use('/api/instructor-videos', instructorVideosRoutes);
 
 // ─── Error Handling ─────────────────────────────────────────────────────────
 app.use(notFound);

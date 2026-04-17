@@ -25,7 +25,24 @@ const { authenticate, authorize } = require('../middleware/auth');
 router.get('/', authenticate, (req, res) => {
   if (req.user.role === 'trainee') {
     const progress = traineeProgress[req.user.id];
-    if (!progress) return res.status(404).json({ error: 'Progress not found.' });
+    if (!progress) {
+      return res.json({
+        userId: req.user.id,
+        overallProgress: 0,
+        readinessScore: 0,
+        completedCourses: 0,
+        totalCourses: 0,
+        simulationHours: 0,
+        completedModules: 0,
+        skills: [
+          { name: 'Technical Knowledge', level: 0, maxLevel: 5, category: 'Core' },
+          { name: 'Practical Skills', level: 0, maxLevel: 5, category: 'Core' },
+          { name: 'Emergency Procedures', level: 0, maxLevel: 5, category: 'Critical' },
+          { name: 'Simulation Performance', level: 0, maxLevel: 5, category: 'Assessment' }
+        ],
+        recentActivity: []
+      });
+    }
     return res.json(progress);
   }
 

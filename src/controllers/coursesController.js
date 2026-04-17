@@ -15,13 +15,42 @@ async function listCourses(req, res) {
       query.$or = [{ title: regex }, { description: regex }];
     }
 
-    const courses = await Course.find(query);
-    res.json(courses.map(c => {
-      const p = c.toObject();
-      delete p._id; delete p.__v;
-      return p;
+    const courses = await Course.find(status ? { ...query, status } : query);
+    
+    // Also fetch public instructor videos and map them to course format
+    const InstructorVideo = require('../models/InstructorVideo');
+    // Instructor videos don't have specialized 'status' in DB yet, but they appear as 'not-started'
+    // So if user filters for not-started or no status, they see videos
+    let videoQuery = { isPublic: true, ...query };
+    const publicVideos = (status && status !== 'not-started') ? [] : await InstructorVideo.find(videoQuery);
+    
+    const mappedVideos = publicVideos.map(v => ({
+      id: v.id,
+      title: v.title,
+      description: v.description,
+      category: v.category,
+      difficulty: v.difficulty || 'intermediate',
+      thumbnail: `https://picsum.photos/400/250?random=${v.id}`,
+      moduleCount: 1,
+      completedModules: 0,
+      progress: 0,
+      status: 'not-started',
+      duration: v.duration || '5 mins',
+      isInstructorVideo: true
     }));
+
+    const allItems = [
+      ...courses.map(c => {
+        const p = c.toObject();
+        delete p._id; delete p.__v;
+        return p;
+      }),
+      ...mappedVideos
+    ];
+
+    res.json(allItems);
   } catch (err) {
+    console.error('listCourses error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 }
@@ -37,13 +66,38 @@ async function getCategories(req, res) {
 
 async function getCourse(req, res) {
   try {
-    const course = await Course.findOne({ id: req.params.id });
-    if (!course) return res.status(404).json({ error: 'Course not found.' });
+    let course = await Course.findOne({ id: req.params.id });
+    
+    if (!course) {
+      // Check if it's an instructor video
+      const InstructorVideo = require('../models/InstructorVideo');
+      const video = await InstructorVideo.findOne({ id: req.params.id });
+      
+      if (video) {
+        return res.json({
+          id: video.id,
+          title: video.title,
+          description: video.description,
+          category: video.category,
+          difficulty: video.difficulty || 'intermediate',
+          thumbnail: `https://picsum.photos/400/250?random=${video.id}`,
+          moduleCount: 1,
+          completedModules: 0,
+          progress: 0,
+          status: 'not-started',
+          duration: video.duration || '5 mins',
+          isInstructorVideo: true
+        });
+      }
+      
+      return res.status(404).json({ error: 'Course not found.' });
+    }
     
     const p = course.toObject();
     delete p._id; delete p.__v;
     res.json(p);
   } catch(err) {
+    console.error('getCourse error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 }

@@ -1,7 +1,9 @@
 const router = require('express').Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../data/db');
-const { users, roles, auditLogs, systemStatus, analyticsData } = db;
+const { roles, systemStatus, analyticsData } = db;
+const User = require('../models/User');
+const AuditLog = require('../models/AuditLog');
 const { authenticate, authorize } = require('../middleware/auth');
 
 const adminOnly = authorize('admin');
@@ -26,19 +28,25 @@ const adminOnly = authorize('admin');
  *       200:
  *         description: Dashboard stats
  */
-router.get('/dashboard', authenticate, adminOnly, (req, res) => {
-  const totalTrainees = users.filter(u => u.role === 'trainee').length;
-  const totalInstructors = users.filter(u => u.role === 'instructor').length;
-  const unreadAlerts = auditLogs.filter(l => l.action === 'Login').length;
+router.get('/dashboard', authenticate, adminOnly, async (req, res) => {
+  try {
+    const totalTrainees = await User.countDocuments({ role: 'trainee' });
+    const totalInstructors = await User.countDocuments({ role: 'instructor' });
+    const totalUsers = await User.countDocuments();
+    const recentAuditLogs = await AuditLog.find().sort({ createdAt: -1 }).limit(5).lean();
+    const unreadAlerts = await AuditLog.countDocuments({ action: 'Login' }); // Match legacy mock logic
 
-  res.json({
-    totalUsers: users.length,
-    totalTrainees,
-    totalInstructors,
-    recentAuditLogs: auditLogs.slice(0, 5),
-    systemStatus,
-    charts: analyticsData,
-  });
+    res.json({
+      totalUsers,
+      totalTrainees,
+      totalInstructors,
+      recentAuditLogs,
+      systemStatus,
+      charts: analyticsData,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 // ─── Roles ────────────────────────────────────────────────────────────────────
@@ -151,17 +159,25 @@ router.delete('/roles/:id', authenticate, adminOnly, (req, res) => {
  *       200:
  *         description: List of audit records
  */
-router.get('/audit-logs', authenticate, adminOnly, (req, res) => {
-  const { module, userId, limit = 50, offset = 0 } = req.query;
-  let logs = [...auditLogs];
+router.get('/audit-logs', authenticate, adminOnly, async (req, res) => {
+  try {
+    const { module, userId, limit = 50, offset = 0 } = req.query;
+    let query = {};
 
-  if (module) logs = logs.filter(l => l.module === module);
-  if (userId) logs = logs.filter(l => l.userId === userId);
+    if (module) query.module = module;
+    if (userId) query.userId = userId;
 
-  const total = logs.length;
-  logs = logs.slice(Number(offset), Number(offset) + Number(limit));
+    const total = await AuditLog.countDocuments(query);
+    const logs = await AuditLog.find(query)
+      .sort({ createdAt: -1 })
+      .skip(Number(offset))
+      .limit(Number(limit))
+      .lean();
 
-  res.json({ total, logs });
+    res.json({ total, logs });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 // ─── System Status ────────────────────────────────────────────────────────────
@@ -252,7 +268,17 @@ router.patch('/security-settings', authenticate, adminOnly, (req, res) => {
  *       200:
  *         description: List of all users in system
  */
-router.get('/users', authenticate, adminOnly, (req, res) => res.json(db.users));
+router.get('/users', authenticate, adminOnly, async (req, res) => {
+  try {
+    const allUsers = await User.find().lean();
+    res.json(allUsers.map(u => {
+      const { passwordHash, ...safeUser } = u;
+      return safeUser;
+    }));
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // ─── Analytics ────────────────────────────────────────────────────────────────
 /**

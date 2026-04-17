@@ -4,8 +4,25 @@ const courseSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   title: { type: String, required: true },
   description: { type: String },
-  category: { type: String },
-  difficulty: { type: String },
+  category: { 
+    type: String, 
+    enum: [
+      'Jet Engine Systems', 
+      'Hydraulics', 
+      'Electrical Systems', 
+      'Avionics', 
+      'Flight Control', 
+      'Weapons Systems', 
+      'Landing Gear', 
+      'Fuel Systems'
+    ],
+    required: true
+  },
+  difficulty: { 
+    type: String, 
+    enum: ['beginner', 'intermediate', 'advanced'],
+    default: 'beginner'
+  },
   thumbnail: { type: String },
   moduleCount: { type: Number, default: 0 },
   completedModules: { type: Number, default: 0 },

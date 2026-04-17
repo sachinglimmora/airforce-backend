@@ -1,6 +1,8 @@
 const router = require('express').Router();
 const { v4: uuidv4 } = require('uuid');
-const { users, traineeProgress, trainingSessions, scenarios, analyticsData } = require('../data/db');
+const { trainingSessions, scenarios, analyticsData } = require('../data/db');
+const User = require('../models/User');
+const TraineeProgress = require('../models/TraineeProgress');
 const { authenticate, authorize } = require('../middleware/auth');
 
 const instructorOnly = authorize('instructor', 'admin');
@@ -24,22 +26,50 @@ const instructorOnly = authorize('instructor', 'admin');
  *       200:
  *         description: List of trainees
  */
-router.get('/trainees', authenticate, instructorOnly, (req, res) => {
-  const trainees = users
-    .filter(u => u.role === 'trainee')
-    .map(u => {
-      const { passwordHash, ...user } = u;
-      const progress = traineeProgress[u.id];
-      return {
-        ...user,
-        readinessScore: progress?.readinessScore ?? 0,
-        progress: progress?.overallProgress ?? 0,
-        simulationHours: progress?.simulationHours ?? 0,
-        status: 'active', // could be derived from lastActive
-      };
-    });
+router.get('/trainees', authenticate, instructorOnly, async (req, res) => {
+  try {
+    console.log('Fetching trainees from MongoDB...');
+    const trainees = await User.find({ role: 'trainee' }).lean();
+    console.log(`Found ${trainees.length} trainees in DB.`);
+    
+    const results = await Promise.all(trainees.map(async (u) => {
+      try {
+        const progress = await TraineeProgress.findOne({ traineeId: u.id }).lean();
+        return {
+          id: u.id,
+          name: u.name,
+          rank: u.rank,
+          email: u.email,
+          squadron: u.squadron,
+          base: u.base,
+          avatar: u.avatar,
+          lastActive: u.lastActive,
+          readinessScore: progress?.readinessScore ?? 0,
+          progress: progress?.overallProgress ?? 0,
+          simulationHours: progress?.simulationHours ?? 0,
+          status: 'active',
+        };
+      } catch (innerErr) {
+        console.error(`Error fetching progress for trainee ${u.id}:`, innerErr);
+        // Return user even without progress
+        return {
+          id: u.id,
+          name: u.name,
+          rank: u.rank,
+          avatar: u.avatar,
+          readinessScore: 0,
+          progress: 0,
+          simulationHours: 0,
+          status: 'active',
+        };
+      }
+    }));
 
-  res.json(trainees);
+    res.json(results);
+  } catch (err) {
+    console.error('CRITICAL: Error in /trainees route:', err);
+    res.status(500).json({ error: 'Server error fetching trainees.' });
+  }
 });
 
 /**
@@ -210,18 +240,23 @@ router.post('/scenarios', authenticate, instructorOnly, (req, res) => {
  *       200:
  *         description: Collective performance analytics
  */
-router.get('/analytics', authenticate, instructorOnly, (req, res) => {
-  const totalTrainees = users.filter(u => u.role === 'trainee').length;
-  const allProgress = Object.values(traineeProgress);
-  const avgReadiness = allProgress.length
-    ? Math.round(allProgress.reduce((s, p) => s + p.readinessScore, 0) / allProgress.length)
-    : 0;
-  const totalSimHours = allProgress.reduce((s, p) => s + p.simulationHours, 0);
+router.get('/analytics', authenticate, instructorOnly, async (req, res) => {
+  try {
+    const totalTrainees = await User.countDocuments({ role: 'trainee' });
+    const allProgress = await TraineeProgress.find().lean();
+    
+    const avgReadiness = allProgress.length
+      ? Math.round(allProgress.reduce((s, p) => s + p.readinessScore, 0) / allProgress.length)
+      : 0;
+    const totalSimHours = allProgress.reduce((s, p) => s + p.simulationHours, 0);
 
-  res.json({
-    summary: { totalTrainees, avgReadiness, totalSimHours },
-    charts: analyticsData,
-  });
+    res.json({
+      summary: { totalTrainees, avgReadiness, totalSimHours },
+      charts: analyticsData,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 module.exports = router;

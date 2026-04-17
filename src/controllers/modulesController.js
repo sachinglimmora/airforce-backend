@@ -2,6 +2,9 @@ const { v4: uuidv4 } = require('uuid');
 const Module = require('../models/Module');
 const Course = require('../models/Course');
 const TraineeProgress = require('../models/TraineeProgress');
+const InstructorVideo = require('../models/InstructorVideo');
+const { uploadVideoBuffer } = require('../services/cloudinaryService');
+const { generateAndUploadVideo } = require('../services/videoGenerationService');
 
 function formatDoc(doc) {
   const p = doc.toObject();
@@ -12,12 +15,38 @@ function formatDoc(doc) {
 async function listModules(req, res) {
   try {
     const { courseId } = req.query;
-    let query = {};
-    if (courseId) query.courseId = courseId;
+    if (!courseId) {
+      const allModules = await Module.find().sort({ order: 1 });
+      return res.json(allModules.map(formatDoc));
+    }
     
-    const modules = await Module.find(query).sort({ order: 1 });
+    let modules = await Module.find({ courseId }).sort({ order: 1 });
+    
+    if (modules.length === 0) {
+      // Check if this "courseId" is actually an Instructor Video ID
+      const video = await InstructorVideo.findOne({ id: courseId });
+      if (video) {
+        // Return a virtual module for this video
+        return res.json([{
+          id: video.id,
+          courseId: video.id,
+          title: video.title,
+          description: video.description,
+          videoUrl: video.videoUrl,
+          videoStatus: 'ready',
+          documentation: video.description,
+          procedures: [],
+          diagrams: [],
+          duration: video.duration || '5 mins',
+          order: 1,
+          isCompleted: false
+        }]);
+      }
+    }
+    
     res.json(modules.map(formatDoc));
   } catch(err) {
+    console.error('listModules error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 }
@@ -69,11 +98,97 @@ async function createModule(req, res) {
 
 async function updateModule(req, res) {
   try {
-    const mod = await Module.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+    // Strip video fields — those are only writable via dedicated video routes
+    const { videoUrl: _v, videoStatus: _vs, ...safeBody } = req.body;
+    const mod = await Module.findOneAndUpdate({ id: req.params.id }, safeBody, { new: true });
     if (!mod) return res.status(404).json({ error: 'Module not found.' });
     res.json(formatDoc(mod));
   } catch(err) {
     res.status(500).json({ error: 'Server error' });
+  }
+}
+
+async function uploadModuleVideo(req, res) {
+  try {
+    const mod = await Module.findOne({ id: req.params.id });
+    if (!mod) return res.status(404).json({ error: 'Module not found.' });
+
+    if (!req.file) return res.status(400).json({ error: 'No video file provided.' });
+
+    const instructorId = req.user.id;
+    const publicId = `module-${mod.id}`;
+    const secureUrl = await uploadVideoBuffer(req.file.buffer, publicId);
+
+    mod.videoUrl = secureUrl;
+    mod.videoStatus = 'ready';
+    await mod.save();
+
+    // Upsert into instructor library
+    await InstructorVideo.findOneAndUpdate(
+      { cloudinaryPublicId: publicId },
+      {
+        $setOnInsert: { id: uuidv4() },
+        instructorId,
+        title: mod.title,
+        description: mod.description || '',
+        videoUrl: secureUrl,
+        cloudinaryPublicId: publicId,
+        category: 'Module Video',
+      },
+      { upsert: true, new: true }
+    );
+
+    res.json({ message: 'Video uploaded successfully.', videoUrl: secureUrl, module: formatDoc(mod) });
+  } catch (err) {
+    console.error('Video upload error:', err);
+    res.status(500).json({ error: 'Failed to upload video.' });
+  }
+}
+
+async function generateModuleVideo(req, res) {
+  try {
+    const mod = await Module.findOne({ id: req.params.id });
+    if (!mod) return res.status(404).json({ error: 'Module not found.' });
+
+    const instructorId = req.user.id;
+    const publicId = `module-${mod.id}`;
+
+    mod.videoStatus = 'processing';
+    await mod.save();
+
+    res.json({ message: 'Video generation started.', videoStatus: 'processing', moduleId: mod.id });
+
+    generateAndUploadVideo({
+      moduleId: mod.id,
+      title: mod.title,
+      description: mod.description,
+      documentation: mod.documentation,
+    })
+      .then(async (secureUrl) => {
+        await Module.findOneAndUpdate({ id: mod.id }, { videoUrl: secureUrl, videoStatus: 'ready' });
+        // Upsert into instructor library
+        await InstructorVideo.findOneAndUpdate(
+          { cloudinaryPublicId: publicId },
+          {
+            $setOnInsert: { id: uuidv4() },
+            instructorId,
+            title: mod.title,
+            description: mod.description || '',
+            videoUrl: secureUrl,
+            cloudinaryPublicId: publicId,
+            category: 'Module Video',
+          },
+          { upsert: true, new: true }
+        );
+        console.log(`[VideoGen] Saved module-${mod.id} to instructor library`);
+      })
+      .catch(async (err) => {
+        console.error('Background video generation failed:', err);
+        await Module.findOneAndUpdate({ id: mod.id }, { videoStatus: 'error' });
+      });
+  } catch (err) {
+    console.error('generateModuleVideo error:', err);
+    res.status(500).json({ error: 'Failed to start video generation.' });
   }
 }
 
@@ -134,4 +249,4 @@ async function deleteModule(req, res) {
   }
 }
 
-module.exports = { listModules, getModule, createModule, updateModule, completeModule, deleteModule };
+module.exports = { listModules, getModule, createModule, updateModule, completeModule, deleteModule, uploadModuleVideo, generateModuleVideo };
